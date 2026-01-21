@@ -1,11 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Phone, MapPin, Clock, Menu as MenuIcon, X, Star, Heart, ShoppingBag } from 'lucide-react';
+import { Phone, MapPin, Clock, Menu as MenuIcon, X, Star, ShoppingBag, ShoppingCart, Moon, Sun, Plus, Minus, Trash2, Tag, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { useTheme } from 'next-themes';
+import { Separator } from '@/components/ui/separator';
 
 export default function App() {
   const [menuItems, setMenuItems] = useState([]);
@@ -13,9 +16,25 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [cart, setCart] = useState([]);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [itemModalOpen, setItemModalOpen] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [mounted, setMounted] = useState(false);
+  const { theme, setTheme } = useTheme();
 
-  // Fetch menu items
+  // Available coupons
+  const coupons = {
+    'SWEET10': { discount: 10, type: 'percentage', description: '10% off on all items' },
+    'FIRST50': { discount: 50, type: 'fixed', description: '₹50 off on first order' },
+    'FESTIVE20': { discount: 20, type: 'percentage', description: '20% off on festive orders' }
+  };
+
   useEffect(() => {
+    setMounted(true);
     fetchMenuItems();
   }, []);
 
@@ -33,6 +52,74 @@ export default function App() {
     }
   };
 
+  // Cart functions
+  const addToCart = (item, quantity = 1) => {
+    const existingItem = cart.find(cartItem => cartItem.id === item.id);
+    if (existingItem) {
+      setCart(cart.map(cartItem =>
+        cartItem.id === item.id
+          ? { ...cartItem, quantity: cartItem.quantity + quantity }
+          : cartItem
+      ));
+    } else {
+      setCart([...cart, { ...item, quantity }]);
+    }
+  };
+
+  const updateCartQuantity = (itemId, newQuantity) => {
+    if (newQuantity <= 0) {
+      removeFromCart(itemId);
+    } else {
+      setCart(cart.map(item =>
+        item.id === itemId ? { ...item, quantity: newQuantity } : item
+      ));
+    }
+  };
+
+  const removeFromCart = (itemId) => {
+    setCart(cart.filter(item => item.id !== itemId));
+  };
+
+  const clearCart = () => {
+    setCart([]);
+  };
+
+  const calculateSubtotal = () => {
+    return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+  };
+
+  const calculateDiscount = () => {
+    if (!appliedCoupon) return 0;
+    const subtotal = calculateSubtotal();
+    if (appliedCoupon.type === 'percentage') {
+      return (subtotal * appliedCoupon.discount) / 100;
+    }
+    return appliedCoupon.discount;
+  };
+
+  const calculateTotal = () => {
+    return calculateSubtotal() - calculateDiscount();
+  };
+
+  const applyCoupon = () => {
+    const coupon = coupons[couponCode.toUpperCase()];
+    if (coupon) {
+      setAppliedCoupon({ code: couponCode.toUpperCase(), ...coupon });
+    } else {
+      alert('Invalid coupon code');
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+  };
+
+  const handleCheckout = () => {
+    setCartOpen(false);
+    setCheckoutOpen(true);
+  };
+
   // Get unique categories
   const categories = ['all', ...new Set(menuItems.map(item => item.category))];
 
@@ -41,7 +128,7 @@ export default function App() {
     ? menuItems 
     : menuItems.filter(item => item.category === selectedCategory);
 
-  // Get best sellers (first 6 items for demo)
+  // Get best sellers (first 6 items)
   const bestSellers = menuItems.slice(0, 6);
 
   // WhatsApp order link
@@ -49,7 +136,7 @@ export default function App() {
 
   // Navigation component
   const Navigation = () => (
-    <nav className="bg-gradient-to-r from-orange-600 to-orange-500 text-white sticky top-0 z-50 shadow-lg">
+    <nav className="bg-gradient-to-r from-orange-600 to-orange-500 dark:from-orange-800 dark:to-orange-700 text-white sticky top-0 z-50 shadow-lg">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-2">
@@ -58,19 +145,60 @@ export default function App() {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex space-x-6">
+          <div className="hidden md:flex space-x-6 items-center">
             <button onClick={() => setCurrentPage('home')} className={`hover:text-orange-200 ${currentPage === 'home' ? 'font-bold' : ''}`}>Home</button>
             <button onClick={() => setCurrentPage('about')} className={`hover:text-orange-200 ${currentPage === 'about' ? 'font-bold' : ''}`}>About</button>
             <button onClick={() => setCurrentPage('menu')} className={`hover:text-orange-200 ${currentPage === 'menu' ? 'font-bold' : ''}`}>Menu</button>
             <button onClick={() => setCurrentPage('bestsellers')} className={`hover:text-orange-200 ${currentPage === 'bestsellers' ? 'font-bold' : ''}`}>Best Sellers</button>
             <button onClick={() => setCurrentPage('gallery')} className={`hover:text-orange-200 ${currentPage === 'gallery' ? 'font-bold' : ''}`}>Gallery</button>
             <button onClick={() => setCurrentPage('contact')} className={`hover:text-orange-200 ${currentPage === 'contact' ? 'font-bold' : ''}`}>Contact</button>
+            
+            {/* Theme Toggle */}
+            {mounted && (
+              <button
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                className="p-2 hover:bg-orange-700 rounded-lg transition-colors"
+              >
+                {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              </button>
+            )}
+            
+            {/* Cart Button */}
+            <button
+              onClick={() => setCartOpen(true)}
+              className="relative p-2 hover:bg-orange-700 rounded-lg transition-colors"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              {cart.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-yellow-400 text-orange-900 text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                  {cart.length}
+                </span>
+              )}
+            </button>
           </div>
 
           {/* Mobile Menu Button */}
-          <button className="md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-            {mobileMenuOpen ? <X className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
-          </button>
+          <div className="flex md:hidden items-center space-x-2">
+            {mounted && (
+              <button
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                className="p-2"
+              >
+                {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              </button>
+            )}
+            <button onClick={() => setCartOpen(true)} className="relative p-2">
+              <ShoppingCart className="h-5 w-5" />
+              {cart.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-yellow-400 text-orange-900 text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                  {cart.length}
+                </span>
+              )}
+            </button>
+            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Navigation */}
@@ -90,7 +218,13 @@ export default function App() {
 
   // MenuItem Card Component
   const MenuItemCard = ({ item, isBestSeller = false }) => (
-    <Card className="overflow-hidden hover:shadow-xl transition-shadow duration-300">
+    <Card 
+      className="overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer"
+      onClick={() => {
+        setSelectedItem(item);
+        setItemModalOpen(true);
+      }}
+    >
       <div className="relative">
         <img src={item.image} alt={item.name} className="w-full h-48 object-cover" />
         {isBestSeller && (
@@ -107,26 +241,270 @@ export default function App() {
       </div>
       <CardContent className="p-4">
         <h3 className="font-bold text-lg mb-1">{item.name}</h3>
-        <p className="text-sm text-gray-600 mb-2">{item.description}</p>
+        <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{item.description}</p>
         <div className="flex items-center justify-between">
-          <span className="text-orange-600 font-bold text-xl">₹{item.price}</span>
+          <span className="text-orange-600 dark:text-orange-400 font-bold text-xl">₹{item.price}</span>
           <Badge variant="secondary">{item.category}</Badge>
         </div>
       </CardContent>
     </Card>
   );
 
+  // Item Detail Modal
+  const ItemDetailModal = () => {
+    const [quantity, setQuantity] = useState(1);
+
+    if (!selectedItem) return null;
+
+    return (
+      <Dialog open={itemModalOpen} onOpenChange={setItemModalOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">{selectedItem.name}</DialogTitle>
+          </DialogHeader>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <img src={selectedItem.image} alt={selectedItem.name} className="w-full h-64 object-cover rounded-lg" />
+            </div>
+            <div className="space-y-4">
+              <div>
+                <Badge variant="secondary" className="mb-2">{selectedItem.category}</Badge>
+                <p className="text-muted-foreground">{selectedItem.description}</p>
+              </div>
+              
+              <div>
+                <p className="text-3xl font-bold text-orange-600 dark:text-orange-400">₹{selectedItem.price}</p>
+                <p className="text-sm text-muted-foreground">Per unit/kg as applicable</p>
+              </div>
+
+              {selectedItem.isAvailable ? (
+                <>
+                  <div className="flex items-center space-x-4">
+                    <span className="font-semibold">Quantity:</span>
+                    <div className="flex items-center space-x-2">
+                      <Button size="sm" variant="outline" onClick={() => setQuantity(Math.max(1, quantity - 1))}>
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <span className="w-12 text-center font-bold">{quantity}</span>
+                      <Button size="sm" variant="outline" onClick={() => setQuantity(quantity + 1)}>
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <Button 
+                    className="w-full bg-orange-600 hover:bg-orange-700"
+                    onClick={() => {
+                      addToCart(selectedItem, quantity);
+                      setItemModalOpen(false);
+                      setQuantity(1);
+                    }}
+                  >
+                    <ShoppingCart className="mr-2 h-5 w-5" />
+                    Add to Cart - ₹{selectedItem.price * quantity}
+                  </Button>
+                </>
+              ) : (
+                <Button className="w-full" disabled>
+                  Out of Stock
+                </Button>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
+  // Cart Sidebar
+  const CartSidebar = () => (
+    <Dialog open={cartOpen} onOpenChange={setCartOpen}>
+      <DialogContent className="max-w-md h-[80vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="flex items-center">
+            <ShoppingCart className="mr-2 h-5 w-5" />
+            Your Cart ({cart.length} {cart.length === 1 ? 'item' : 'items'})
+          </DialogTitle>
+        </DialogHeader>
+        
+        {cart.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <ShoppingCart className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">Your cart is empty</p>
+              <Button className="mt-4" onClick={() => { setCartOpen(false); setCurrentPage('menu'); }}>
+                Browse Menu
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="flex-1 overflow-y-auto space-y-4">
+              {cart.map(item => (
+                <Card key={item.id}>
+                  <CardContent className="p-4">
+                    <div className="flex gap-4">
+                      <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded" />
+                      <div className="flex-1">
+                        <h4 className="font-semibold">{item.name}</h4>
+                        <p className="text-sm text-muted-foreground">₹{item.price} each</p>
+                        <div className="flex items-center justify-between mt-2">
+                          <div className="flex items-center space-x-2">
+                            <Button size="sm" variant="outline" onClick={() => updateCartQuantity(item.id, item.quantity - 1)}>
+                              <Minus className="h-3 w-3" />
+                            </Button>
+                            <span className="w-8 text-center font-bold">{item.quantity}</span>
+                            <Button size="sm" variant="outline" onClick={() => updateCartQuantity(item.id, item.quantity + 1)}>
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          <Button size="sm" variant="destructive" onClick={() => removeFromCart(item.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold">₹{item.price * item.quantity}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            <div className="border-t pt-4 space-y-2">
+              <div className="flex justify-between text-lg font-semibold">
+                <span>Subtotal:</span>
+                <span>₹{calculateSubtotal()}</span>
+              </div>
+              <Button className="w-full bg-orange-600 hover:bg-orange-700" size="lg" onClick={handleCheckout}>
+                Proceed to Checkout
+              </Button>
+            </div>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+
+  // Checkout Modal
+  const CheckoutModal = () => (
+    <Dialog open={checkoutOpen} onOpenChange={setCheckoutOpen}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-2xl">Checkout</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-6">
+          {/* Order Summary */}
+          <div>
+            <h3 className="font-bold text-lg mb-4">Order Summary</h3>
+            <div className="space-y-2">
+              {cart.map(item => (
+                <div key={item.id} className="flex justify-between text-sm">
+                  <span>{item.name} x {item.quantity}</span>
+                  <span>₹{item.price * item.quantity}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Coupon Section */}
+          <div>
+            <h3 className="font-bold text-lg mb-4">Apply Coupon</h3>
+            {appliedCoupon ? (
+              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold text-green-700 dark:text-green-400">Coupon Applied: {appliedCoupon.code}</p>
+                    <p className="text-sm text-green-600 dark:text-green-500">{appliedCoupon.description}</p>
+                  </div>
+                  <Button size="sm" variant="ghost" onClick={removeCoupon}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter coupon code"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value)}
+                />
+                <Button onClick={applyCoupon} variant="outline">
+                  <Tag className="mr-2 h-4 w-4" />
+                  Apply
+                </Button>
+              </div>
+            )}
+            <div className="mt-4 space-y-1">
+              <p className="text-sm font-semibold">Available Coupons:</p>
+              {Object.entries(coupons).map(([code, details]) => (
+                <div key={code} className="text-xs text-muted-foreground">
+                  <span className="font-mono bg-muted px-2 py-1 rounded">{code}</span> - {details.description}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Price Breakdown */}
+          <div>
+            <h3 className="font-bold text-lg mb-4">Price Details</h3>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span>Subtotal:</span>
+                <span>₹{calculateSubtotal()}</span>
+              </div>
+              {appliedCoupon && (
+                <div className="flex justify-between text-green-600 dark:text-green-400">
+                  <span>Discount ({appliedCoupon.code}):</span>
+                  <span>-₹{calculateDiscount()}</span>
+                </div>
+              )}
+              <Separator />
+              <div className="flex justify-between text-xl font-bold">
+                <span>Total:</span>
+                <span className="text-orange-600 dark:text-orange-400">₹{calculateTotal()}</span>
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Payment Button */}
+          <div>
+            <Button
+              className="w-full bg-orange-600 hover:bg-orange-700"
+              size="lg"
+              onClick={() => {
+                setCheckoutOpen(false);
+                setCurrentPage('payment');
+              }}
+            >
+              <CreditCard className="mr-2 h-5 w-5" />
+              Proceed to Payment - ₹{calculateTotal()}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
   // Home Page
   const HomePage = () => (
     <div>
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 py-16">
+      <div className="bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-16">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-5xl md:text-6xl font-bold text-orange-600 mb-4">
+          <h1 className="text-5xl md:text-6xl font-bold text-orange-600 dark:text-orange-400 mb-4">
             New Bombay Sweets
           </h1>
-          <p className="text-2xl text-gray-700 mb-8">Sweetness Served with Tradition</p>
-          <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+          <p className="text-2xl text-gray-700 dark:text-gray-300 mb-8">Sweetness Served with Tradition</p>
+          <p className="text-lg text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
             Experience the authentic taste of India with our premium sweets, Bengali delicacies, and savory snacks.
             Made fresh daily with love and tradition.
           </p>
@@ -135,7 +513,7 @@ export default function App() {
               <Phone className="mr-2 h-5 w-5" />
               Order on WhatsApp
             </Button>
-            <Button size="lg" variant="outline" className="border-orange-600 text-orange-600 hover:bg-orange-50" onClick={() => setCurrentPage('menu')}>
+            <Button size="lg" variant="outline" className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:border-orange-400 dark:text-orange-400" onClick={() => setCurrentPage('menu')}>
               View Menu
             </Button>
           </div>
@@ -145,8 +523,8 @@ export default function App() {
       {/* Best Sellers Preview */}
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-gray-800 mb-4">Customer Favorites</h2>
-          <p className="text-gray-600">Our most loved items that keep customers coming back</p>
+          <h2 className="text-4xl font-bold mb-4">Customer Favorites</h2>
+          <p className="text-muted-foreground">Our most loved items that keep customers coming back</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {bestSellers.map(item => (
@@ -161,9 +539,9 @@ export default function App() {
       </div>
 
       {/* Categories Highlight */}
-      <div className="bg-orange-50 py-16">
+      <div className="bg-orange-50 dark:bg-gray-800 py-16">
         <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center text-gray-800 mb-12">Our Categories</h2>
+          <h2 className="text-4xl font-bold text-center mb-12">Our Categories</h2>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {['Indian Sweets', 'Bengali Sweets', 'Snacks & Namkeen', 'Chaat & Dishes', 'Seasonal Specials'].map(cat => (
               <Card key={cat} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => { setSelectedCategory(cat); setCurrentPage('menu'); }}>
@@ -178,11 +556,11 @@ export default function App() {
       </div>
 
       {/* Festive Banner */}
-      <div className="bg-gradient-to-r from-orange-600 to-yellow-500 text-white py-12">
+      <div className="bg-gradient-to-r from-orange-600 to-yellow-500 dark:from-orange-800 dark:to-yellow-700 text-white py-12">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">🎉 Special Festive Offers Available! 🎉</h2>
           <p className="text-xl mb-6">Celebrate every occasion with our premium sweets and savories</p>
-          <Button size="lg" variant="secondary" onClick={() => window.open(whatsappLink, '_blank')}>
+          <Button size="lg" variant="secondary" onClick={() => setCurrentPage('menu')}>
             Order Now
           </Button>
         </div>
@@ -194,16 +572,16 @@ export default function App() {
   const AboutPage = () => (
     <div className="container mx-auto px-4 py-16">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-5xl font-bold text-center text-orange-600 mb-8">About Us</h1>
+        <h1 className="text-5xl font-bold text-center text-orange-600 dark:text-orange-400 mb-8">About Us</h1>
         
-        <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
-          <h2 className="text-3xl font-bold text-gray-800 mb-4">Our Story</h2>
-          <p className="text-gray-700 mb-4 leading-relaxed">
+        <div className="bg-card rounded-lg shadow-lg p-8 mb-8">
+          <h2 className="text-3xl font-bold mb-4">Our Story</h2>
+          <p className="text-muted-foreground mb-4 leading-relaxed">
             Welcome to New Bombay Sweets, Dhanbad's trusted destination for authentic Indian sweets and savories. 
             For years, we have been serving the community with traditional recipes passed down through generations, 
             combined with modern hygiene standards and quality control.
           </p>
-          <p className="text-gray-700 mb-4 leading-relaxed">
+          <p className="text-muted-foreground mb-4 leading-relaxed">
             Our journey began with a simple mission: to bring the authentic taste of Bombay's finest sweets to 
             Jharkhand. Today, we are proud to offer an extensive range of Indian sweets, Bengali delicacies, 
             fresh snacks, and mouth-watering chaat items.
@@ -215,7 +593,7 @@ export default function App() {
             <CardContent className="p-6">
               <div className="text-4xl mb-4">🏆</div>
               <h3 className="text-xl font-bold mb-2">Quality First</h3>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 We use only the finest ingredients and maintain strict quality control to ensure every sweet 
                 meets our high standards.
               </p>
@@ -226,7 +604,7 @@ export default function App() {
             <CardContent className="p-6">
               <div className="text-4xl mb-4">🌿</div>
               <h3 className="text-xl font-bold mb-2">Fresh Daily</h3>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 All our products are made fresh daily in our kitchen, ensuring you get the best taste and quality 
                 every time.
               </p>
@@ -237,7 +615,7 @@ export default function App() {
             <CardContent className="p-6">
               <div className="text-4xl mb-4">🧼</div>
               <h3 className="text-xl font-bold mb-2">Hygiene Standards</h3>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 We follow stringent hygiene protocols in our kitchen and packaging, ensuring safe and clean 
                 products for your family.
               </p>
@@ -248,7 +626,7 @@ export default function App() {
             <CardContent className="p-6">
               <div className="text-4xl mb-4">👨‍🍳</div>
               <h3 className="text-xl font-bold mb-2">Traditional Recipes</h3>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 Our expert halwais use time-tested recipes and traditional methods to create authentic flavors 
                 you'll love.
               </p>
@@ -256,9 +634,9 @@ export default function App() {
           </Card>
         </div>
 
-        <div className="bg-gradient-to-r from-orange-100 to-yellow-100 rounded-lg p-8 text-center">
-          <h3 className="text-2xl font-bold text-gray-800 mb-4">Visit Us Today!</h3>
-          <p className="text-gray-700 mb-6">
+        <div className="bg-gradient-to-r from-orange-100 to-yellow-100 dark:from-orange-900/30 dark:to-yellow-900/30 rounded-lg p-8 text-center">
+          <h3 className="text-2xl font-bold mb-4">Visit Us Today!</h3>
+          <p className="text-muted-foreground mb-6">
             Experience the taste of tradition at New Bombay Sweets, Dhanbad. We look forward to serving you!
           </p>
           <Button onClick={() => setCurrentPage('contact')} className="bg-orange-600 hover:bg-orange-700">
@@ -272,8 +650,8 @@ export default function App() {
   // Menu Page
   const MenuPage = () => (
     <div className="container mx-auto px-4 py-16">
-      <h1 className="text-5xl font-bold text-center text-orange-600 mb-4">Our Menu</h1>
-      <p className="text-center text-gray-600 mb-12">Explore our wide range of sweets, snacks, and delicacies</p>
+      <h1 className="text-5xl font-bold text-center text-orange-600 dark:text-orange-400 mb-4">Our Menu</h1>
+      <p className="text-center text-muted-foreground mb-12">Explore our wide range of sweets, snacks, and delicacies</p>
 
       {/* Category Filter */}
       <div className="mb-8 flex flex-wrap justify-center gap-2">
@@ -281,7 +659,7 @@ export default function App() {
           <Button
             key={cat}
             variant={selectedCategory === cat ? 'default' : 'outline'}
-            className={selectedCategory === cat ? 'bg-orange-600 hover:bg-orange-700' : 'border-orange-600 text-orange-600'}
+            className={selectedCategory === cat ? 'bg-orange-600 hover:bg-orange-700' : 'border-orange-600 text-orange-600 dark:border-orange-400 dark:text-orange-400'}
             onClick={() => setSelectedCategory(cat)}
           >
             {cat === 'all' ? 'All Items' : cat}
@@ -292,7 +670,7 @@ export default function App() {
       {/* Menu Items Grid */}
       {loading ? (
         <div className="text-center py-16">
-          <p className="text-gray-600">Loading menu items...</p>
+          <p className="text-muted-foreground">Loading menu items...</p>
         </div>
       ) : filteredItems.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -302,27 +680,17 @@ export default function App() {
         </div>
       ) : (
         <div className="text-center py-16">
-          <p className="text-gray-600">No items found in this category.</p>
+          <p className="text-muted-foreground">No items found in this category.</p>
         </div>
       )}
-
-      {/* Order CTA */}
-      <div className="mt-16 bg-orange-50 rounded-lg p-8 text-center">
-        <h3 className="text-2xl font-bold text-gray-800 mb-4">Ready to Order?</h3>
-        <p className="text-gray-600 mb-6">Contact us on WhatsApp to place your order</p>
-        <Button size="lg" className="bg-green-600 hover:bg-green-700" onClick={() => window.open(whatsappLink, '_blank')}>
-          <Phone className="mr-2 h-5 w-5" />
-          Order on WhatsApp
-        </Button>
-      </div>
     </div>
   );
 
   // Best Sellers Page
   const BestSellersPage = () => (
     <div className="container mx-auto px-4 py-16">
-      <h1 className="text-5xl font-bold text-center text-orange-600 mb-4">Best Sellers</h1>
-      <p className="text-center text-gray-600 mb-12">Our customers' most loved items</p>
+      <h1 className="text-5xl font-bold text-center text-orange-600 dark:text-orange-400 mb-4">Best Sellers</h1>
+      <p className="text-center text-muted-foreground mb-12">Our customers' most loved items</p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {menuItems.slice(0, 9).map(item => (
@@ -330,23 +698,23 @@ export default function App() {
         ))}
       </div>
 
-      <div className="mt-16 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-lg p-8 text-center">
-        <h3 className="text-2xl font-bold text-gray-800 mb-4">Why Customers Love Us</h3>
+      <div className="mt-16 bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 rounded-lg p-8 text-center">
+        <h3 className="text-2xl font-bold mb-4">Why Customers Love Us</h3>
         <div className="grid md:grid-cols-3 gap-6 mt-8">
           <div>
             <div className="text-3xl mb-2">⭐</div>
             <h4 className="font-bold mb-2">Premium Quality</h4>
-            <p className="text-gray-600 text-sm">Only the finest ingredients</p>
+            <p className="text-muted-foreground text-sm">Only the finest ingredients</p>
           </div>
           <div>
-            <div className="text-3xl mb-2">🎂</div>
+            <div className="text-3xl mb-2">🍰</div>
             <h4 className="font-bold mb-2">Fresh Daily</h4>
-            <p className="text-gray-600 text-sm">Made fresh every morning</p>
+            <p className="text-muted-foreground text-sm">Made fresh every morning</p>
           </div>
           <div>
             <div className="text-3xl mb-2">💯</div>
             <h4 className="font-bold mb-2">Authentic Taste</h4>
-            <p className="text-gray-600 text-sm">Traditional recipes</p>
+            <p className="text-muted-foreground text-sm">Traditional recipes</p>
           </div>
         </div>
       </div>
@@ -356,28 +724,28 @@ export default function App() {
   // Gallery Page
   const GalleryPage = () => {
     const galleryImages = [
-      { url: 'https://via.placeholder.com/400x300?text=Fresh+Sweets', title: 'Fresh Sweets' },
-      { url: 'https://via.placeholder.com/400x300?text=Bengali+Delights', title: 'Bengali Delights' },
-      { url: 'https://via.placeholder.com/400x300?text=Festive+Special', title: 'Festive Special' },
-      { url: 'https://via.placeholder.com/400x300?text=Snacks+Counter', title: 'Snacks Counter' },
-      { url: 'https://via.placeholder.com/400x300?text=Shop+Interior', title: 'Shop Interior' },
-      { url: 'https://via.placeholder.com/400x300?text=Chaat+Corner', title: 'Chaat Corner' },
-      { url: 'https://via.placeholder.com/400x300?text=Gift+Boxes', title: 'Gift Boxes' },
-      { url: 'https://via.placeholder.com/400x300?text=Traditional+Sweets', title: 'Traditional Sweets' },
-      { url: 'https://via.placeholder.com/400x300?text=Namkeen+Variety', title: 'Namkeen Variety' },
+      { url: 'https://images.pexels.com/photos/8788869/pexels-photo-8788869.jpeg?auto=compress&cs=tinysrgb&w=800', title: 'Fresh Sweets' },
+      { url: 'https://images.pexels.com/photos/8887049/pexels-photo-8887049.jpeg?auto=compress&cs=tinysrgb&w=800', title: 'Bengali Delights' },
+      { url: 'https://images.pexels.com/photos/19151506/pexels-photo-19151506.jpeg?auto=compress&cs=tinysrgb&w=800', title: 'Festive Special' },
+      { url: 'https://images.unsplash.com/photo-1695568181558-034b7d3e49eb?w=800&auto=format&fit=crop', title: 'Snacks Counter' },
+      { url: 'https://images.unsplash.com/photo-1695568181140-8b49ec87a96d?w=800&auto=format&fit=crop', title: 'Shop Interior' },
+      { url: 'https://images.pexels.com/photos/34270742/pexels-photo-34270742.jpeg?auto=compress&cs=tinysrgb&w=800', title: 'Chaat Corner' },
+      { url: 'https://images.pexels.com/photos/8887065/pexels-photo-8887065.jpeg?auto=compress&cs=tinysrgb&w=800', title: 'Gift Boxes' },
+      { url: 'https://images.unsplash.com/photo-1695568180842-1fcf31187dd6?w=800&auto=format&fit=crop', title: 'Traditional Sweets' },
+      { url: 'https://images.pexels.com/photos/34968009/pexels-photo-34968009.jpeg?auto=compress&cs=tinysrgb&w=800', title: 'Namkeen Variety' },
     ];
 
     return (
       <div className="container mx-auto px-4 py-16">
-        <h1 className="text-5xl font-bold text-center text-orange-600 mb-4">Gallery</h1>
-        <p className="text-center text-gray-600 mb-12">A glimpse into our world of sweets and savories</p>
+        <h1 className="text-5xl font-bold text-center text-orange-600 dark:text-orange-400 mb-4">Gallery</h1>
+        <p className="text-center text-muted-foreground mb-12">A glimpse into our world of sweets and savories</p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {galleryImages.map((img, idx) => (
             <div key={idx} className="overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
               <img src={img.url} alt={img.title} className="w-full h-64 object-cover hover:scale-110 transition-transform duration-300" />
-              <div className="bg-white p-3 text-center">
-                <p className="font-semibold text-gray-800">{img.title}</p>
+              <div className="bg-card p-3 text-center">
+                <p className="font-semibold">{img.title}</p>
               </div>
             </div>
           ))}
@@ -389,41 +757,41 @@ export default function App() {
   // Contact Page
   const ContactPage = () => (
     <div className="container mx-auto px-4 py-16">
-      <h1 className="text-5xl font-bold text-center text-orange-600 mb-12">Contact Us</h1>
+      <h1 className="text-5xl font-bold text-center text-orange-600 dark:text-orange-400 mb-12">Contact Us</h1>
 
       <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
         {/* Contact Information */}
         <div>
           <Card>
             <CardContent className="p-8">
-              <h2 className="text-2xl font-bold text-gray-800 mb-6">Get in Touch</h2>
+              <h2 className="text-2xl font-bold mb-6">Get in Touch</h2>
               
               <div className="space-y-6">
                 <div className="flex items-start space-x-4">
-                  <MapPin className="h-6 w-6 text-orange-600 mt-1" />
+                  <MapPin className="h-6 w-6 text-orange-600 dark:text-orange-400 mt-1" />
                   <div>
                     <h3 className="font-bold mb-1">Address</h3>
-                    <p className="text-gray-600">City Centre Below ICICI Bank</p>
-                    <p className="text-gray-600">Dhanbad, Jharkhand 826007</p>
+                    <p className="text-muted-foreground">City Centre Below ICICI Bank</p>
+                    <p className="text-muted-foreground">Dhanbad, Jharkhand 826007</p>
                   </div>
                 </div>
 
                 <div className="flex items-start space-x-4">
-                  <Phone className="h-6 w-6 text-orange-600 mt-1" />
+                  <Phone className="h-6 w-6 text-orange-600 dark:text-orange-400 mt-1" />
                   <div>
                     <h3 className="font-bold mb-1">Phone</h3>
-                    <a href="tel:+919162739650" className="text-orange-600 hover:underline">
+                    <a href="tel:+919162739650" className="text-orange-600 dark:text-orange-400 hover:underline">
                       +91 9162739650
                     </a>
                   </div>
                 </div>
 
                 <div className="flex items-start space-x-4">
-                  <Clock className="h-6 w-6 text-orange-600 mt-1" />
+                  <Clock className="h-6 w-6 text-orange-600 dark:text-orange-400 mt-1" />
                   <div>
                     <h3 className="font-bold mb-1">Business Hours</h3>
-                    <p className="text-gray-600">Monday - Sunday</p>
-                    <p className="text-gray-600">9:00 AM - 9:00 PM</p>
+                    <p className="text-muted-foreground">Monday - Sunday</p>
+                    <p className="text-muted-foreground">9:00 AM - 9:00 PM</p>
                   </div>
                 </div>
               </div>
@@ -472,9 +840,9 @@ export default function App() {
       </div>
 
       {/* Additional Info */}
-      <div className="mt-12 bg-orange-50 rounded-lg p-8 text-center max-w-4xl mx-auto">
-        <h3 className="text-2xl font-bold text-gray-800 mb-4">Visit Our Store</h3>
-        <p className="text-gray-600 mb-6">
+      <div className="mt-12 bg-orange-50 dark:bg-gray-800 rounded-lg p-8 text-center max-w-4xl mx-auto">
+        <h3 className="text-2xl font-bold mb-4">Visit Our Store</h3>
+        <p className="text-muted-foreground mb-6">
           We're conveniently located in the heart of Dhanbad at City Centre, just below ICICI Bank. 
           Come visit us to experience our fresh sweets and warm hospitality!
         </p>
@@ -489,9 +857,118 @@ export default function App() {
     </div>
   );
 
+  // Payment Demo Page
+  const PaymentPage = () => (
+    <div className="container mx-auto px-4 py-16 max-w-2xl">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl flex items-center">
+            <CreditCard className="mr-2 h-6 w-6" />
+            Payment Gateway (Demo)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
+            <p className="text-sm text-orange-800 dark:text-orange-200">
+              <strong>Demo Mode:</strong> This is a demonstration payment page. No actual payment will be processed.
+            </p>
+          </div>
+
+          {/* Order Summary */}
+          <div>
+            <h3 className="font-bold text-lg mb-4">Order Summary</h3>
+            <div className="bg-muted rounded-lg p-4 space-y-2">
+              {cart.map(item => (
+                <div key={item.id} className="flex justify-between text-sm">
+                  <span>{item.name} x {item.quantity}</span>
+                  <span>₹{item.price * item.quantity}</span>
+                </div>
+              ))}
+              <Separator />
+              {appliedCoupon && (
+                <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
+                  <span>Discount ({appliedCoupon.code}):</span>
+                  <span>-₹{calculateDiscount()}</span>
+                </div>
+              )}
+              <div className="flex justify-between font-bold text-lg pt-2">
+                <span>Total Amount:</span>
+                <span className="text-orange-600 dark:text-orange-400">₹{calculateTotal()}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Razorpay Demo Interface */}
+          <div className="border rounded-lg p-6 space-y-4">
+            <div className="flex items-center justify-center mb-4">
+              <div className="text-2xl font-bold text-blue-600">Razorpay</div>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Card Number</label>
+                <Input placeholder="1234 5678 9012 3456" disabled />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Expiry</label>
+                  <Input placeholder="MM/YY" disabled />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">CVV</label>
+                  <Input placeholder="123" type="password" disabled />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Name on Card</label>
+                <Input placeholder="John Doe" disabled />
+              </div>
+            </div>
+
+            <div className="pt-4">
+              <Button 
+                className="w-full bg-blue-600 hover:bg-blue-700"
+                size="lg"
+                onClick={() => {
+                  alert('Demo Payment Successful! ✅\n\nIn production, this would process a real payment through Razorpay.\n\nOrder Summary:\n' + cart.map(item => `${item.name} x${item.quantity}`).join('\n') + `\n\nTotal: ₹${calculateTotal()}`);
+                  clearCart();
+                  setCheckoutOpen(false);
+                  setCurrentPage('home');
+                }}
+              >
+                Pay ₹{calculateTotal()} (Demo)
+              </Button>
+            </div>
+          </div>
+
+          <div className="text-center text-sm text-muted-foreground">
+            <p>🔒 Secured by Razorpay (Demo Mode)</p>
+            <p className="mt-2">For actual payments, API keys would be required.</p>
+          </div>
+
+          <div className="flex gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => setCurrentPage('home')}>
+              Cancel
+            </Button>
+            <Button 
+              variant="outline" 
+              className="flex-1"
+              onClick={() => window.open(whatsappLink, '_blank')}
+            >
+              <Phone className="mr-2 h-4 w-4" />
+              Order via WhatsApp Instead
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
   // Footer Component
   const Footer = () => (
-    <footer className="bg-gray-900 text-white py-12 mt-16">
+    <footer className="bg-gray-900 dark:bg-gray-950 text-white py-12 mt-16">
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-3 gap-8">
           <div>
@@ -534,7 +1011,7 @@ export default function App() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background text-foreground">
       <Navigation />
       
       <main className="flex-grow">
@@ -544,9 +1021,15 @@ export default function App() {
         {currentPage === 'bestsellers' && <BestSellersPage />}
         {currentPage === 'gallery' && <GalleryPage />}
         {currentPage === 'contact' && <ContactPage />}
+        {currentPage === 'payment' && <PaymentPage />}
       </main>
 
       <Footer />
+      
+      {/* Modals */}
+      <ItemDetailModal />
+      <CartSidebar />
+      <CheckoutModal />
     </div>
   );
 }
