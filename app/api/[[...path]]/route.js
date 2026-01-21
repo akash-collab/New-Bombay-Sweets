@@ -367,7 +367,7 @@ export async function PUT(request, { params }) {
         { returnDocument: 'after' }
       );
       
-      if (!result.value) {
+      if (!result) {
         return NextResponse.json(
           { error: 'Item not found' },
           { status: 404, headers: corsHeaders }
@@ -375,13 +375,13 @@ export async function PUT(request, { params }) {
       }
       
       const updatedItem = {
-        id: result.value._id.toString(),
-        name: result.value.name,
-        category: result.value.category,
-        price: result.value.price,
-        description: result.value.description,
-        image: result.value.image,
-        isAvailable: result.value.isAvailable
+        id: result._id.toString(),
+        name: result.name,
+        category: result.category,
+        price: result.price,
+        description: result.description,
+        image: result.image,
+        isAvailable: result.isAvailable
       };
       
       return NextResponse.json(updatedItem, { headers: corsHeaders });
