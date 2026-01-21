@@ -149,7 +149,7 @@ export async function POST(request, { params }) {
       // Clear existing data
       await collection.deleteMany({});
       
-      // Seed data
+      // Seed data with real images
       const seedData = [
         // Indian Sweets
         {
@@ -157,7 +157,7 @@ export async function POST(request, { params }) {
           category: 'Indian Sweets',
           price: 450,
           description: 'Premium cashew fudge, thin and diamond-shaped, garnished with silver leaf',
-          image: 'https://via.placeholder.com/300x200?text=Kaju+Katli',
+          image: 'https://images.pexels.com/photos/8788869/pexels-photo-8788869.jpeg?auto=compress&cs=tinysrgb&w=600',
           isAvailable: true
         },
         {
@@ -165,7 +165,7 @@ export async function POST(request, { params }) {
           category: 'Indian Sweets',
           price: 50,
           description: 'Soft milk-solid balls deep-fried and soaked in rose-flavored sugar syrup',
-          image: 'https://via.placeholder.com/300x200?text=Gulab+Jamun',
+          image: 'https://images.pexels.com/photos/19151506/pexels-photo-19151506.jpeg?auto=compress&cs=tinysrgb&w=600',
           isAvailable: true
         },
         {
@@ -173,7 +173,7 @@ export async function POST(request, { params }) {
           category: 'Indian Sweets',
           price: 40,
           description: 'Spongy cottage cheese balls soaked in light sugar syrup',
-          image: 'https://via.placeholder.com/300x200?text=Rasgulla',
+          image: 'https://images.unsplash.com/photo-1695568180070-8b5acead5cf4?w=600&auto=format&fit=crop',
           isAvailable: true
         },
         {
@@ -181,7 +181,7 @@ export async function POST(request, { params }) {
           category: 'Indian Sweets',
           price: 350,
           description: 'Round sweet balls made from fine boondi pearls, melts in mouth',
-          image: 'https://via.placeholder.com/300x200?text=Motichoor+Laddu',
+          image: 'https://images.pexels.com/photos/8887049/pexels-photo-8887049.jpeg?auto=compress&cs=tinysrgb&w=600',
           isAvailable: true
         },
         {
@@ -189,7 +189,7 @@ export async function POST(request, { params }) {
           category: 'Indian Sweets',
           price: 400,
           description: 'Rich and crumbly sweet made from solidified sweetened milk',
-          image: 'https://via.placeholder.com/300x200?text=Milk+Cake',
+          image: 'https://images.pexels.com/photos/8887065/pexels-photo-8887065.jpeg?auto=compress&cs=tinysrgb&w=600',
           isAvailable: true
         },
         // Bengali Sweets
@@ -198,7 +198,7 @@ export async function POST(request, { params }) {
           category: 'Bengali Sweets',
           price: 45,
           description: 'Authentic Bengali spongy cottage cheese balls in sugar syrup',
-          image: 'https://via.placeholder.com/300x200?text=Rosogolla',
+          image: 'https://images.unsplash.com/photo-1695568181558-034b7d3e49eb?w=600&auto=format&fit=crop',
           isAvailable: true
         },
         {
@@ -206,7 +206,7 @@ export async function POST(request, { params }) {
           category: 'Bengali Sweets',
           price: 380,
           description: 'Delicate sweet made from fresh cottage cheese, lightly sweetened',
-          image: 'https://via.placeholder.com/300x200?text=Sandesh',
+          image: 'https://images.unsplash.com/photo-1695568181140-8b49ec87a96d?w=600&auto=format&fit=crop',
           isAvailable: true
         },
         {
@@ -214,7 +214,7 @@ export async function POST(request, { params }) {
           category: 'Bengali Sweets',
           price: 420,
           description: 'Cylindrical sweet made from chhena, coated with coconut',
-          image: 'https://via.placeholder.com/300x200?text=Chamcham',
+          image: 'https://images.unsplash.com/photo-1695568180842-1fcf31187dd6?w=600&auto=format&fit=crop',
           isAvailable: true
         },
         {
@@ -222,7 +222,7 @@ export async function POST(request, { params }) {
           category: 'Bengali Sweets',
           price: 60,
           description: 'Sweet yogurt dessert, caramelized and fermented to perfection',
-          image: 'https://via.placeholder.com/300x200?text=Mishti+Doi',
+          image: 'https://images.unsplash.com/photo-1695568181440-aca4dac18650?w=600&auto=format&fit=crop',
           isAvailable: true
         },
         // Snacks & Namkeen
@@ -231,7 +231,7 @@ export async function POST(request, { params }) {
           category: 'Snacks & Namkeen',
           price: 20,
           description: 'Crispy triangular pastry filled with spiced potatoes and peas',
-          image: 'https://via.placeholder.com/300x200?text=Samosa',
+          image: 'https://images.pexels.com/photos/34270742/pexels-photo-34270742.jpeg?auto=compress&cs=tinysrgb&w=600',
           isAvailable: true
         },
         {
@@ -239,7 +239,7 @@ export async function POST(request, { params }) {
           category: 'Snacks & Namkeen',
           price: 25,
           description: 'Flaky deep-fried snack filled with spiced lentils',
-          image: 'https://via.placeholder.com/300x200?text=Kachori',
+          image: 'https://images.pexels.com/photos/34968009/pexels-photo-34968009.jpeg?auto=compress&cs=tinysrgb&w=600',
           isAvailable: true
         },
         {
@@ -247,7 +247,7 @@ export async function POST(request, { params }) {
           category: 'Snacks & Namkeen',
           price: 180,
           description: 'Crunchy blend of fried lentils, peanuts, and spices (per kg)',
-          image: 'https://via.placeholder.com/300x200?text=Namkeen+Mixture',
+          image: 'https://images.pexels.com/photos/8887004/pexels-photo-8887004.jpeg?auto=compress&cs=tinysrgb&w=600',
           isAvailable: true
         },
         {
@@ -255,7 +255,7 @@ export async function POST(request, { params }) {
           category: 'Snacks & Namkeen',
           price: 200,
           description: 'Crispy noodle-like snack made from gram flour (per kg)',
-          image: 'https://via.placeholder.com/300x200?text=Bhujia',
+          image: 'https://images.pexels.com/photos/8887004/pexels-photo-8887004.jpeg?auto=compress&cs=tinysrgb&w=600',
           isAvailable: true
         },
         // Chaat & Dishes
@@ -264,7 +264,7 @@ export async function POST(request, { params }) {
           category: 'Chaat & Dishes',
           price: 40,
           description: 'Crispy hollow puris filled with tangy tamarind water and potatoes',
-          image: 'https://via.placeholder.com/300x200?text=Pani+Puri',
+          image: 'https://images.pexels.com/photos/34270742/pexels-photo-34270742.jpeg?auto=compress&cs=tinysrgb&w=600',
           isAvailable: true
         },
         {
@@ -272,7 +272,7 @@ export async function POST(request, { params }) {
           category: 'Chaat & Dishes',
           price: 50,
           description: 'Crispy puris topped with yogurt, chutneys, and sev',
-          image: 'https://via.placeholder.com/300x200?text=Dahi+Puri',
+          image: 'https://images.pexels.com/photos/34270742/pexels-photo-34270742.jpeg?auto=compress&cs=tinysrgb&w=600',
           isAvailable: true
         },
         {
@@ -280,7 +280,7 @@ export async function POST(request, { params }) {
           category: 'Chaat & Dishes',
           price: 80,
           description: 'Spicy mashed vegetable curry served with buttered bread rolls',
-          image: 'https://via.placeholder.com/300x200?text=Pav+Bhaji',
+          image: 'https://images.pexels.com/photos/34968009/pexels-photo-34968009.jpeg?auto=compress&cs=tinysrgb&w=600',
           isAvailable: true
         },
         {
@@ -288,7 +288,7 @@ export async function POST(request, { params }) {
           category: 'Chaat & Dishes',
           price: 90,
           description: 'Spicy chickpea curry served with fluffy deep-fried bread',
-          image: 'https://via.placeholder.com/300x200?text=Chole+Bhature',
+          image: 'https://images.pexels.com/photos/34968009/pexels-photo-34968009.jpeg?auto=compress&cs=tinysrgb&w=600',
           isAvailable: true
         },
         // Seasonal Specials
@@ -297,7 +297,7 @@ export async function POST(request, { params }) {
           category: 'Seasonal Specials',
           price: 300,
           description: 'Crescent-shaped pastry filled with khoya and dry fruits (per kg)',
-          image: 'https://via.placeholder.com/300x200?text=Gujiya',
+          image: 'https://images.pexels.com/photos/8887049/pexels-photo-8887049.jpeg?auto=compress&cs=tinysrgb&w=600',
           isAvailable: true
         },
         {
@@ -305,7 +305,7 @@ export async function POST(request, { params }) {
           category: 'Seasonal Specials',
           price: 320,
           description: 'Flaky crisp sweet with cardamom flavor that melts in mouth',
-          image: 'https://via.placeholder.com/300x200?text=Soan+Papdi',
+          image: 'https://images.unsplash.com/photo-1695568181140-8b49ec87a96d?w=600&auto=format&fit=crop',
           isAvailable: true
         },
         {
@@ -313,7 +313,7 @@ export async function POST(request, { params }) {
           category: 'Seasonal Specials',
           price: 500,
           description: 'Premium laddus packed with almonds, cashews, and pistachios',
-          image: 'https://via.placeholder.com/300x200?text=Dry+Fruit+Laddu',
+          image: 'https://images.pexels.com/photos/8887049/pexels-photo-8887049.jpeg?auto=compress&cs=tinysrgb&w=600',
           isAvailable: true
         }
       ];
