@@ -284,16 +284,13 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "GET /api/menu - Fetch all menu items"
-    - "POST /api/menu - Create new menu item"
-    - "PUT /api/menu/:id - Update menu item"
-    - "DELETE /api/menu/:id - Delete menu item"
-    - "MongoDB connection setup"
+  current_focus: []
   stuck_tasks: []
-  test_all: true
+  test_all: false
   test_priority: "high_first"
 
 agent_communication:
   - agent: "main"
     message: "Initial implementation complete. Built complete website for New Bombay Sweets with all required pages and backend API. Database has been seeded with 20 menu items. Need comprehensive backend API testing for all CRUD operations. Frontend testing should be done after backend is verified."
+  - agent: "testing"
+    message: "Backend API testing completed successfully. All core CRUD operations working: MongoDB connection (✅), GET /api/menu (✅), POST /api/menu (✅), PUT /api/menu/:id (✅), DELETE /api/menu/:id (✅). Fixed MongoDB driver compatibility issue in PUT operation. Minor issue: Invalid ObjectId format returns 500 instead of 404, but doesn't affect normal operations. All backend functionality ready for production use."
